@@ -1,0 +1,96 @@
+version: "3.9"
+
+services:
+
+  # --- Broker de mensajeria asincrona (Comunicacion asincrona) ---
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"   # protocolo AMQP (usado por los microservicios)
+      - "15672:15672" # UI de administracion -> http://localhost:15672 (guest/guest)
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - taller-net
+
+  # --- Base de datos propia de MS-1: Banco de Preguntas ---
+  db-banco-preguntas:
+    image: postgres:16
+    container_name: db-banco-preguntas
+    environment:
+      POSTGRES_DB: banco_preguntas
+      POSTGRES_USER: banco_preguntas
+      POSTGRES_PASSWORD: banco_preguntas
+    ports:
+      - "5433:5432"   # puerto distinto al de MS-2 para evitar choques en local
+    volumes:
+      - db_banco_preguntas_data:/var/lib/postgresql/data
+    networks:
+      - taller-net
+
+  # --- Base de datos propia de MS-2: Ciclo de Vida y Revision ---
+  db-ciclo-vida:
+    image: postgres:16
+    container_name: db-ciclo-vida
+    environment:
+      POSTGRES_DB: ciclo_vida
+      POSTGRES_USER: ciclo_vida
+      POSTGRES_PASSWORD: ciclo_vida
+    ports:
+      - "5434:5432"
+    volumes:
+      - db_ciclo_vida_data:/var/lib/postgresql/data
+    networks:
+      - taller-net
+
+  # --- MS-1: Banco de Preguntas (Python / FastAPI) ---
+  # Descomentar cuando el servicio tenga su Dockerfile listo.
+  # ms-banco-preguntas:
+  #   build: ./ms-banco-preguntas
+  #   container_name: ms-banco-preguntas
+  #   ports:
+  #     - "8001:8000"   # REST
+  #     - "50051:50051" # gRPC
+  #   environment:
+  #     DATABASE_URL: postgresql://banco_preguntas:banco_preguntas@db-banco-preguntas:5432/banco_preguntas
+  #     RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+  #   depends_on:
+  #     db-banco-preguntas:
+  #       condition: service_started
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   networks:
+  #     - taller-net
+
+  # --- MS-2: Ciclo de Vida y Revision (Java / Spring Boot) ---
+  # Descomentar cuando el servicio tenga su Dockerfile listo.
+  # ms-ciclo-vida:
+  #   build: ./ms-ciclo-vida
+  #   container_name: ms-ciclo-vida
+  #   ports:
+  #     - "8002:8080"   # REST
+  #   environment:
+  #     SPRING_DATASOURCE_URL: jdbc:postgresql://db-ciclo-vida:5432/ciclo_vida
+  #     SPRING_DATASOURCE_USERNAME: ciclo_vida
+  #     SPRING_DATASOURCE_PASSWORD: ciclo_vida
+  #     SPRING_RABBITMQ_HOST: rabbitmq
+  #     GRPC_CLIENT_BANCO-PREGUNTAS_ADDRESS: static://ms-banco-preguntas:50051
+  #   depends_on:
+  #     db-ciclo-vida:
+  #       condition: service_started
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   networks:
+  #     - taller-net
+
+networks:
+  taller-net:
+    driver: bridge
+
+volumes:
+  db_banco_preguntas_data:
+  db_ciclo_vida_data:

@@ -1,0 +1,28 @@
+# --- Python (ms-banco-preguntas) ---
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+*.egg-info/
+
+# Stubs gRPC generados por generate_grpc.sh (se regeneran localmente)
+app/infrastructure/grpc/pregunta_pb2.py
+app/infrastructure/grpc/pregunta_pb2_grpc.py
+
+# --- Java / Spring Boot (ms-ciclo-vida) ---
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/
+HELP.md
+
+# --- IDEs ---
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# --- Docker ---
+*.log
