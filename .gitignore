@@ -11,6 +11,7 @@ app/infrastructure/grpc/pregunta_pb2.py
 app/infrastructure/grpc/pregunta_pb2_grpc.py
 
 # --- Java / Spring Boot (ms-ciclo-vida) ---
+temp_auto_push.bat
 target/
 *.class
 *.jar
@@ -20,9 +21,10 @@ HELP.md
 
 # --- IDEs ---
 .idea/
-.vscode/
 *.iml
 .DS_Store
 
 # --- Docker ---
 *.log
+.gitignore
+branch_structure.json
