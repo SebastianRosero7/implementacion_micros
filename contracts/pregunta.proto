@@ -2,9 +2,7 @@ syntax = "proto3";
 
 package bancopreguntas;
 
-// MS-1 (Python/FastAPI - Sebas) expone este servicio.
-// MS-2 (Java/Spring Boot - Habi) lo consume como cliente.
-option java_package = "co.unicauca.cicloVidaRevision.grpc"; //ajustar segun la ruta del proyecto
+option java_package = "co.unicauca.cicloVidaRevision.grpc";
 option java_multiple_files = true;
 
 service PreguntaService {

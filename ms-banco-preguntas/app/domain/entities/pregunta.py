@@ -1,4 +1,3 @@
-"""Agregado Pregunta - Aggregate Root (Taller DDD, Tabla 4 y punto 9)."""
 import uuid
 from dataclasses import dataclass, field
 

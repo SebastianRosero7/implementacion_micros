@@ -1,5 +1,3 @@
-"""Servidor gRPC que expone ObtenerPreguntaCompleta.
-"""
 from dotenv import load_dotenv
 load_dotenv()
 from concurrent import futures
@@ -9,7 +7,6 @@ import grpc
 from app.infrastructure.db.session import SessionLocal
 from app.infrastructure.db.repositorio_pregunta_sqlalchemy import RepositorioPreguntaSQLAlchemy
 
-# Generados por protoc (no existen hasta correr el comando de generación)
 from app.infrastructure.grpc import pregunta_pb2, pregunta_pb2_grpc
 
 

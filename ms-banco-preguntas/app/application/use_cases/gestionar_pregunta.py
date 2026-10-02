@@ -1,4 +1,3 @@
-"""Casos de uso CU-03 (crear), CU-04 (editar), consulta y listado."""
 from app.domain.entities.pregunta import Pregunta
 from app.domain.repositories.repositorio_pregunta import RepositorioPregunta
 from app.domain.services.validador_estructural import ValidadorEstructural
@@ -9,9 +8,6 @@ from app.infrastructure.messaging.rabbitmq_publisher import RabbitMQPublisher
 
 
 class GestionarPregunta:
-    """Un único caso de uso concentra crear/editar/consultar/listar
-    para evitar dispersar la orquestación en varias clases pequeñas."""
-
     def __init__(
         self,
         repositorio: RepositorioPregunta,

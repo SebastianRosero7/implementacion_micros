@@ -1,4 +1,3 @@
-"""Domain service: ValidadorEstructural"""
 from app.domain.entities.pregunta import Pregunta, PreguntaInvalidaError
 
 

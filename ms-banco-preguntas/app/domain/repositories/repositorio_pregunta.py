@@ -1,5 +1,3 @@
-"""Repositorio como interfaz pura, sin acoplar el dominio a
-tecnología de persistencia concreta (RNF-12)."""
 from abc import ABC, abstractmethod
 
 from app.domain.entities.pregunta import Pregunta

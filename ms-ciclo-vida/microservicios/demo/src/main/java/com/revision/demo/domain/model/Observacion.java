@@ -5,7 +5,7 @@ import java.util.Objects;
 public class Observacion {
     private final String codigo;
     private final String descripcion;
-    private final String categoria; // Ejemplo: "De forma", "De fondo", "Metodología"
+    private final String categoria;
 
     public Observacion(String codigo, String descripcion, String categoria) {
         this.codigo = validarTexto(codigo, "El código es obligatorio");
