@@ -1,0 +1,174 @@
+{
+  "info": {
+    "_postman_id": "4b7908d1-f07c-4ec8-9baf-690ec244fb5a",
+    "name": "MS-2 Ciclo de Vida y Revisión",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "ms1", "value": "http://localhost:8001" },
+    { "key": "ms2", "value": "http://localhost:8002" },
+    { "key": "preguntaId", "value": "41" },
+    { "key": "revisionId", "value": "" },
+    { "key": "revisorId", "value": "202" }
+  ],
+  "item": [
+    {
+      "name": "1. Crear pregunta (MS-1 publica PreguntaCreada)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"contexto\": \"Contexto de ejemplo\",\n  \"pregunta_directa\": \"¿Cuál opción describe la idea principal?\",\n  \"distractores\": [\n    { \"id\": \"A\", \"texto\": \"Opción correcta\", \"es_correcto\": true },\n    { \"id\": \"B\", \"texto\": \"Opción B\", \"es_correcto\": false },\n    { \"id\": \"C\", \"texto\": \"Opción C\", \"es_correcto\": false },\n    { \"id\": \"D\", \"texto\": \"Opción D\", \"es_correcto\": false }\n  ],\n  \"justificacion\": \"La opción A corresponde al contexto.\",\n  \"competencia\": \"Lectura crítica\",\n  \"tema\": \"Comprensión de lectura\",\n  \"subtema\": \"Idea principal\",\n  \"nivel_dificultad\": \"MEDIO\",\n  \"bibliografia\": \"\"\n}"
+        },
+        "url": "{{ms1}}/preguntas"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Pregunta creada y pendiente de revisión', function () {",
+            "  pm.response.to.have.status(201);",
+            "  const pregunta = pm.response.json();",
+            "  pm.expect(pregunta.estado).to.eql('PENDIENTE_REVISION');",
+            "  pm.collectionVariables.set('preguntaId', pregunta.id);",
+            "});"
+          ],
+          "type": "text/javascript"
+        }
+      }]
+    },
+    {
+      "name": "2. Consultar revisión creada por RabbitMQ",
+      "request": {
+        "method": "GET",
+        "url": "{{ms2}}/api/revisiones/pregunta/{{preguntaId}}"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('La revisión fue creada por el consumidor', function () {",
+            "  pm.response.to.have.status(200);",
+            "  const revision = pm.response.json();",
+            "  pm.collectionVariables.set('revisionId', revision.idRevision);",
+            "  pm.expect(revision.estado).to.eql('PENDIENTE');",
+            "});"
+          ],
+          "type": "text/javascript"
+        }
+      }]
+    },
+    {
+      "name": "3. Asignar revisor",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"idSolicitud\": {{preguntaId}},\n  \"idEvaluador\": {{revisorId}},\n  \"fechaAsignacion\": \"2026-10-02\"\n}"
+        },
+        "url": "{{ms2}}/api/revisiones/asignar"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Revisor asignado a la revisión', function () {",
+            "  pm.response.to.have.status(201);",
+            "  const asignacion = pm.response.json();",
+            "  pm.expect(asignacion.idRevision).to.eql(pm.collectionVariables.get('revisionId'));",
+            "  pm.expect(asignacion.idEvaluador).to.eql(Number(pm.collectionVariables.get('revisorId')));",
+            "});"
+          ],
+          "type": "text/javascript"
+        }
+      }]
+    },
+    {
+      "name": "4. Iniciar revisión",
+      "request": {
+        "method": "POST",
+        "url": "{{ms2}}/api/revisiones/{{revisionId}}/iniciar"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Revisión iniciada', function () {",
+            "  pm.response.to.have.status(200);",
+            "  pm.expect(pm.response.json().estado).to.eql('EN_REVISION');",
+            "});"
+          ],
+          "type": "text/javascript"
+        }
+      }]
+    },
+    {
+      "name": "5. Evaluar y registrar observación (invoca gRPC)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"idRevision\": \"{{revisionId}}\",\n  \"codigo\": \"OBS-1\",\n  \"descripcion\": \"Aclarar el enunciado\",\n  \"categoria\": \"FORMA\"\n}"
+        },
+        "url": "{{ms2}}/api/revisiones/evaluar"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Observación registrada y pregunta consultada por gRPC', function () {",
+            "  pm.response.to.have.status(200);",
+            "});"
+          ],
+          "type": "text/javascript"
+        }
+      }]
+    },
+    {
+      "name": "6. Reanudar revisión tras observaciones",
+      "request": {
+        "method": "POST",
+        "url": "{{ms2}}/api/revisiones/{{revisionId}}/iniciar"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Revisión reanudada después de la observación', function () {",
+            "  pm.response.to.have.status(200);",
+            "  pm.expect(pm.response.json().estado).to.eql('EN_REVISION');",
+            "});"
+          ],
+          "type": "text/javascript"
+        }
+      }]
+    },
+    {
+      "name": "7. Emitir dictamen",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"evaluacionId\": \"{{revisionId}}\",\n  \"resultado\": \"APROBADA\",\n  \"justificacion\": \"La pregunta cumple los criterios de calidad.\"\n}"
+        },
+        "url": "{{ms2}}/api/revisiones/dictamen"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Dictamen aprobado emitido', function () {",
+            "  pm.response.to.have.status(200);",
+            "  pm.expect(pm.response.json().resultado).to.eql('APROBADA');",
+            "});"
+          ],
+          "type": "text/javascript"
+        }
+      }]
+    }
+  ]
+}

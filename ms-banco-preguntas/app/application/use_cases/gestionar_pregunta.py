@@ -40,6 +40,7 @@ class GestionarPregunta:
             nivel_dificultad=NivelDificultad(datos["nivel_dificultad"]),
             bibliografia=datos.get("bibliografia", ""),
         )
+        pregunta.marcar_pendiente_revision()
 
         # Se guarda primero: el id es incremental y solo existe
         # después de que la base de datos lo asigna.

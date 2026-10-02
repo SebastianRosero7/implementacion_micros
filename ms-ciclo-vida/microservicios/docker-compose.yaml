@@ -1,0 +1,114 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - taller-net
+
+  db-banco-preguntas:
+    image: postgres:16
+    container_name: db-banco-preguntas
+    environment:
+      POSTGRES_DB: banco_preguntas
+      POSTGRES_USER: banco_preguntas
+      POSTGRES_PASSWORD: banco_preguntas
+    ports:
+      - "5433:5432"
+    volumes:
+      - db_banco_preguntas_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U banco_preguntas -d banco_preguntas"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - taller-net
+
+  db-ciclo-vida:
+    image: postgres:16
+    container_name: db-ciclo-vida
+    environment:
+      POSTGRES_DB: ciclo_vida
+      POSTGRES_USER: ciclo_vida
+      POSTGRES_PASSWORD: ciclo_vida
+    ports:
+      - "5434:5432"
+    volumes:
+      - db_ciclo_vida_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ciclo_vida -d ciclo_vida"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - taller-net
+
+  ms-ciclo-vida:
+    build:
+      context: ../..
+      dockerfile: ms-ciclo-vida/Dockerfile
+    container_name: ms-ciclo-vida
+    ports:
+      - "8002:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-ciclo-vida:5432/ciclo_vida
+      SPRING_DATASOURCE_USERNAME: ciclo_vida
+      SPRING_DATASOURCE_PASSWORD: ciclo_vida
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      GRPC_CLIENT_BANCO_PREGUNTAS_ADDRESS: ms-banco-preguntas-grpc:50051
+    depends_on:
+      db-ciclo-vida:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      ms-banco-preguntas-grpc:
+        condition: service_started
+    networks:
+      - taller-net
+
+  ms-banco-preguntas:
+    build: ../../ms-banco-preguntas
+    container_name: ms-banco-preguntas
+    ports:
+      - "8001:8000"
+    environment:
+      DATABASE_URL: postgresql://banco_preguntas:banco_preguntas@db-banco-preguntas:5432/banco_preguntas
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      db-banco-preguntas:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - taller-net
+
+  ms-banco-preguntas-grpc:
+    build: ../../ms-banco-preguntas
+    container_name: ms-banco-preguntas-grpc
+    command: ["python", "-m", "app.interfaces.grpc.server"]
+    ports:
+      - "50051:50051"
+    environment:
+      DATABASE_URL: postgresql://banco_preguntas:banco_preguntas@db-banco-preguntas:5432/banco_preguntas
+    depends_on:
+      db-banco-preguntas:
+        condition: service_healthy
+    networks:
+      - taller-net
+
+networks:
+  taller-net:
+    driver: bridge
+
+volumes:
+  db_banco_preguntas_data:
+  db_ciclo_vida_data:
