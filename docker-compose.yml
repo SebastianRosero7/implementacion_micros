@@ -48,23 +48,22 @@ services:
       - taller-net
 
   # --- MS-1: Banco de Preguntas (Python / FastAPI) ---
-  # Descomentar cuando el servicio tenga su Dockerfile listo.
-  # ms-banco-preguntas:
-  #   build: ./ms-banco-preguntas
-  #   container_name: ms-banco-preguntas
-  #   ports:
-  #     - "8001:8000"   # REST
-  #     - "50051:50051" # gRPC
-  #   environment:
-  #     DATABASE_URL: postgresql://banco_preguntas:banco_preguntas@db-banco-preguntas:5432/banco_preguntas
-  #     RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
-  #   depends_on:
-  #     db-banco-preguntas:
-  #       condition: service_started
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   networks:
-  #     - taller-net
+  ms-banco-preguntas:
+    build: ./ms-banco-preguntas
+    container_name: ms-banco-preguntas
+    ports:
+      - "8001:8000"   # REST
+      #- "50051:50051" # gRPC
+    environment:
+      DATABASE_URL: postgresql://banco_preguntas:banco_preguntas@db-banco-preguntas:5432/banco_preguntas
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      db-banco-preguntas:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - taller-net
 
   # --- MS-2: Ciclo de Vida y Revision (Java / Spring Boot) ---
   # Descomentar cuando el servicio tenga su Dockerfile listo.

@@ -1,0 +1,55 @@
+{
+  "info": {
+    "name": "MS-1 Banco de Preguntas",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8001" }
+  ],
+  "item": [
+    {
+      "name": "Crear pregunta",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/preguntas",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"contexto\": \"La fotosíntesis es el proceso mediante el cual las plantas convierten luz solar en energía química.\",\n  \"pregunta_directa\": \"¿Cuál es el principal producto de la fotosíntesis?\",\n  \"distractores\": [\n    {\"id\": \"a\", \"texto\": \"Glucosa\", \"es_correcto\": true},\n    {\"id\": \"b\", \"texto\": \"Dióxido de carbono\", \"es_correcto\": false},\n    {\"id\": \"c\", \"texto\": \"Nitrógeno\", \"es_correcto\": false},\n    {\"id\": \"d\", \"texto\": \"Agua\", \"es_correcto\": false}\n  ],\n  \"justificacion\": \"La glucosa es el azúcar que las plantas producen durante la fotosíntesis.\",\n  \"competencia\": \"Ciencias naturales\",\n  \"tema\": \"Biología\",\n  \"subtema\": \"Procesos celulares\",\n  \"nivel_dificultad\": \"MEDIO\",\n  \"bibliografia\": \"Campbell, Biology, 11th ed.\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Crear pregunta inválida (3 distractores)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/preguntas",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"contexto\": \"Texto de prueba\",\n  \"pregunta_directa\": \"¿Pregunta de prueba?\",\n  \"distractores\": [\n    {\"id\": \"a\", \"texto\": \"Opción 1\", \"es_correcto\": true},\n    {\"id\": \"b\", \"texto\": \"Opción 2\", \"es_correcto\": false},\n    {\"id\": \"c\", \"texto\": \"Opción 3\", \"es_correcto\": false}\n  ],\n  \"justificacion\": \"Justificación de prueba\",\n  \"competencia\": \"Prueba\",\n  \"tema\": \"Prueba\",\n  \"subtema\": \"Prueba\",\n  \"nivel_dificultad\": \"BAJO\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Listar preguntas",
+      "request": { "method": "GET", "url": "{{base_url}}/preguntas" }
+    },
+    {
+      "name": "Consultar pregunta por id",
+      "request": { "method": "GET", "url": "{{base_url}}/preguntas/1" }
+    },
+    {
+      "name": "Editar pregunta",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/preguntas/1",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"pregunta_directa\": \"¿Cuál es el producto principal de la fotosíntesis en las plantas?\"\n}"
+        }
+      }
+    }
+  ]
+}

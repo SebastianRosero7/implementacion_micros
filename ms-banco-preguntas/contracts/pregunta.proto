@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package bancopreguntas;
+
+// MS-1 (Python/FastAPI - Sebas) expone este servicio.
+// MS-2 (Java/Spring Boot - Habi) lo consume como cliente.
+option java_package = "co.unicauca.cicloVidaRevision.grpc"; //ajustar segun la ruta del proyecto
+option java_multiple_files = true;
+
+service PreguntaService {
+  // Devuelve el detalle completo de una pregunta para que
+  // Ciclo de Vida y Revisión pueda evaluarla (CU-07).
+  rpc ObtenerPreguntaCompleta (ObtenerPreguntaRequest) returns (PreguntaCompletaResponse);
+}
+
+message ObtenerPreguntaRequest {
+  string pregunta_id = 1;
+}
+
+message Distractor {
+  string id = 1;
+  string texto = 2;
+}
+
+message PreguntaCompletaResponse {
+  string pregunta_id = 1;
+  string contexto = 2;
+  string pregunta_directa = 3;
+  repeated Distractor distractores = 4;   // exactamente 4
+  string respuesta_correcta_id = 5;       // referencia al id del distractor correcto
+  string justificacion = 6;
+  string competencia = 7;
+  string tema = 8;
+  string subtema = 9;
+  string nivel_dificultad = 10;           // ej: BAJO, MEDIO, ALTO
+  string estado = 11;                     // BORRADOR, PENDIENTE_REVISION, EN_REVISION, APROBADA, RECHAZADA, PUBLICADA, ARCHIVADA
+  string bibliografia = 12;
+
+  // Se retorna explícitamente si la pregunta no existe,
+  // en vez de depender solo del status code de gRPC.
+  bool encontrada = 13;
+}
