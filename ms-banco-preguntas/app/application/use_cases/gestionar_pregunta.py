@@ -69,3 +69,16 @@ class GestionarPregunta:
 
     def listar(self) -> list[Pregunta]:
         return self.repositorio.listar()
+
+    def registrar_resultado_revision(self, pregunta_id: int, resultado: str) -> Pregunta:
+        pregunta = self.repositorio.obtener_por_id(pregunta_id)
+        if pregunta is None:
+            raise ValueError(f"Pregunta {pregunta_id} no encontrada")
+        res = resultado.strip().upper()
+        if res == "APROBADA":
+            pregunta.aprobar()
+        elif res == "RECHAZADA":
+            pregunta.rechazar()
+        else:
+            raise ValueError(f"Resultado no soportado: {resultado}")
+        return self.repositorio.guardar(pregunta)

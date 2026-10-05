@@ -7,6 +7,7 @@ import com.revision.demo.domain.model.Revision;
 import com.revision.demo.domain.model.TipoDictamen;
 import com.revision.demo.domain.repository.RevisionRepository;
 import com.revision.demo.domain.service.GestorTransicionesEstado;
+import com.revision.demo.application.port.DictamenPublisher;
 import java.time.LocalDate;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -15,13 +16,23 @@ public class EmitirDictamenUseCase {
 
     private final RevisionRepository revisionRepository;
     private final GestorTransicionesEstado gestorTransicionesEstado;
+    private final DictamenPublisher dictamenPublisher;
 
     public EmitirDictamenUseCase(
         RevisionRepository revisionRepository,
         GestorTransicionesEstado gestorTransicionesEstado
     ) {
+        this(revisionRepository, gestorTransicionesEstado, null);
+    }
+
+    public EmitirDictamenUseCase(
+        RevisionRepository revisionRepository,
+        GestorTransicionesEstado gestorTransicionesEstado,
+        DictamenPublisher dictamenPublisher
+    ) {
         this.revisionRepository = Objects.requireNonNull(revisionRepository);
         this.gestorTransicionesEstado = Objects.requireNonNull(gestorTransicionesEstado);
+        this.dictamenPublisher = dictamenPublisher;
     }
 
     public DictamenResponseDTO ejecutar(DictamenRequestDto request) {
@@ -40,6 +51,10 @@ public class EmitirDictamenUseCase {
         );
         var dictamen = Objects.requireNonNull(guardada.getDictamen(),
             "La revisión guardada debe contener el dictamen emitido");
+
+        if (dictamenPublisher != null) {
+            dictamenPublisher.publicar(guardada, request.resultado(), request.justificacion());
+        }
 
         return new DictamenResponseDTO(
             guardada.getId(),

@@ -2,15 +2,15 @@ version: "3.9"
 
 services:
 
-  # --- Broker de mensajeria asincrona (Comunicacion asincrona) ---
+  # --- Broker de mensajería asíncrona ---
   rabbitmq:
     image: rabbitmq:3.13-management
     container_name: rabbitmq
     ports:
-      - "5672:5672"   # protocolo AMQP (usado por los microservicios)
-      - "15672:15672" # UI de administracion -> http://localhost:15672 (guest/guest)
+      - "5672:5672"   # protocolo AMQP
+      - "15672:15672" # UI de administración -> http://localhost:15672 (guest/guest)
     healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,13 +26,18 @@ services:
       POSTGRES_USER: banco_preguntas
       POSTGRES_PASSWORD: banco_preguntas
     ports:
-      - "5433:5432"   # puerto distinto al de MS-2 para evitar choques en local
+      - "5433:5432"
     volumes:
       - db_banco_preguntas_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U banco_preguntas -d banco_preguntas"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - taller-net
 
-  # --- Base de datos propia de MS-2: Ciclo de Vida y Revision ---
+  # --- Base de datos propia de MS-2: Ciclo de Vida y Revisión ---
   db-ciclo-vida:
     image: postgres:16
     container_name: db-ciclo-vida
@@ -44,47 +49,70 @@ services:
       - "5434:5432"
     volumes:
       - db_ciclo_vida_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ciclo_vida -d ciclo_vida"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - taller-net
 
-  # --- MS-1: Banco de Preguntas (Python / FastAPI) ---
+  # --- MS-1: Banco de Preguntas - REST (Python / FastAPI) ---
   ms-banco-preguntas:
     build: ./ms-banco-preguntas
     container_name: ms-banco-preguntas
     ports:
       - "8001:8000"   # REST
-      #- "50051:50051" # gRPC
     environment:
       DATABASE_URL: postgresql://banco_preguntas:banco_preguntas@db-banco-preguntas:5432/banco_preguntas
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
     depends_on:
       db-banco-preguntas:
-        condition: service_started
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
     networks:
       - taller-net
 
-  # --- MS-2: Ciclo de Vida y Revision (Java / Spring Boot) ---
-  # Descomentar cuando el servicio tenga su Dockerfile listo.
-  # ms-ciclo-vida:
-  #   build: ./ms-ciclo-vida
-  #   container_name: ms-ciclo-vida
-  #   ports:
-  #     - "8002:8080"   # REST
-  #   environment:
-  #     SPRING_DATASOURCE_URL: jdbc:postgresql://db-ciclo-vida:5432/ciclo_vida
-  #     SPRING_DATASOURCE_USERNAME: ciclo_vida
-  #     SPRING_DATASOURCE_PASSWORD: ciclo_vida
-  #     SPRING_RABBITMQ_HOST: rabbitmq
-  #     GRPC_CLIENT_BANCO-PREGUNTAS_ADDRESS: static://ms-banco-preguntas:50051
-  #   depends_on:
-  #     db-ciclo-vida:
-  #       condition: service_started
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   networks:
-  #     - taller-net
+  # --- MS-1: Banco de Preguntas - gRPC (Python / gRPC) ---
+  ms-banco-preguntas-grpc:
+    build: ./ms-banco-preguntas
+    container_name: ms-banco-preguntas-grpc
+    command: ["python", "-m", "app.interfaces.grpc.server"]
+    ports:
+      - "50051:50051" # gRPC
+    environment:
+      DATABASE_URL: postgresql://banco_preguntas:banco_preguntas@db-banco-preguntas:5432/banco_preguntas
+    depends_on:
+      db-banco-preguntas:
+        condition: service_healthy
+    networks:
+      - taller-net
+
+  # --- MS-2: Ciclo de Vida y Revisión (Java / Spring Boot) ---
+  ms-ciclo-vida:
+    build:
+      context: .
+      dockerfile: ms-ciclo-vida/Dockerfile
+    container_name: ms-ciclo-vida
+    ports:
+      - "8002:8080"   # REST
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-ciclo-vida:5432/ciclo_vida
+      SPRING_DATASOURCE_USERNAME: ciclo_vida
+      SPRING_DATASOURCE_PASSWORD: ciclo_vida
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      GRPC_CLIENT_BANCO_PREGUNTAS_ADDRESS: ms-banco-preguntas-grpc:50051
+    depends_on:
+      db-ciclo-vida:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      ms-banco-preguntas-grpc:
+        condition: service_started
+    networks:
+      - taller-net
 
 networks:
   taller-net:

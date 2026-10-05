@@ -47,8 +47,10 @@ public class RevisionUseCaseConfig {
     @Bean
     public EmitirDictamenUseCase emitirDictamenUseCase(
         RevisionRepository revisionRepository,
-        GestorTransicionesEstado gestorTransicionesEstado
+        GestorTransicionesEstado gestorTransicionesEstado,
+        com.revision.demo.application.port.DictamenPublisher dictamenPublisher
     ) {
-        return new EmitirDictamenUseCase(revisionRepository, gestorTransicionesEstado);
+        return new EmitirDictamenUseCase(revisionRepository, gestorTransicionesEstado, dictamenPublisher);
     }
 }
+
