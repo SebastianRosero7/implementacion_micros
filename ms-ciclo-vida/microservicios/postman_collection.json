@@ -169,6 +169,26 @@
           "type": "text/javascript"
         }
       }]
+    },
+    {
+      "name": "8. Verificar actualización en MS-1 (Cierre del ciclo)",
+      "request": {
+        "method": "GET",
+        "url": "{{ms1}}/preguntas/{{preguntaId}}"
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test('Pregunta actualizada a APROBADA en MS-1 tras el evento', function () {",
+            "  pm.response.to.have.status(200);",
+            "  pm.expect(pm.response.json().estado).to.eql('APROBADA');",
+            "});"
+          ],
+          "type": "text/javascript"
+        }
+      }]
     }
   ]
 }
+

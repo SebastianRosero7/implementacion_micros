@@ -47,6 +47,33 @@ class GestionarPreguntaTest(unittest.TestCase):
             publisher.publicar.call_args.kwargs["data"]["estado"],
         )
 
+    def test_registrar_resultado_revision_aprobada(self):
+        pregunta_mock = Mock()
+        pregunta_mock.estado = EstadoPregunta.PENDIENTE_REVISION
+        repositorio = Mock()
+        repositorio.obtener_por_id.return_value = pregunta_mock
+        repositorio.guardar.side_effect = lambda p: p
+
+        caso = GestionarPregunta(repositorio, ValidadorEstructural(), Mock())
+        caso.registrar_resultado_revision(41, "APROBADA")
+
+        pregunta_mock.aprobar.assert_called_once()
+        repositorio.guardar.assert_called_once_with(pregunta_mock)
+
+    def test_registrar_resultado_revision_rechazada(self):
+        pregunta_mock = Mock()
+        pregunta_mock.estado = EstadoPregunta.PENDIENTE_REVISION
+        repositorio = Mock()
+        repositorio.obtener_por_id.return_value = pregunta_mock
+        repositorio.guardar.side_effect = lambda p: p
+
+        caso = GestionarPregunta(repositorio, ValidadorEstructural(), Mock())
+        caso.registrar_resultado_revision(41, "RECHAZADA")
+
+        pregunta_mock.rechazar.assert_called_once()
+        repositorio.guardar.assert_called_once_with(pregunta_mock)
+
 
 if __name__ == "__main__":
     unittest.main()
+

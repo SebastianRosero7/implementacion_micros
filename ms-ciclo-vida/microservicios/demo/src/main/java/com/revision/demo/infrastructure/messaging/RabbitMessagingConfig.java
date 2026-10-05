@@ -15,6 +15,8 @@ public class RabbitMessagingConfig {
     public static final String QUESTION_CREATED_DEAD_LETTER_QUEUE = "ciclo_vida.pregunta_creada.dlq";
     public static final String QUESTION_CREATED_ROUTING_KEY = "pregunta.creada";
     public static final String QUESTION_CREATED_DEAD_LETTER_ROUTING_KEY = "pregunta.creada.dlq";
+    public static final String QUESTION_APPROVED_ROUTING_KEY = "pregunta.aprobada";
+    public static final String QUESTION_REJECTED_ROUTING_KEY = "pregunta.rechazada";
 
     @Bean
     public TopicExchange bancoPreguntasEventsExchange() {

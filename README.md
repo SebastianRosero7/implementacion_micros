@@ -66,14 +66,14 @@ Abre PowerShell en la raíz del repositorio, `implementacion_micros`.
 ### Construir y levantar todos los servicios
 
 ```powershell
-docker compose -f ms-ciclo-vida\microservicios\docker-compose.yaml up -d --build
+docker compose up -d --build
 ```
 
 La primera compilación descarga las imágenes base y compila MS-1 y MS-2; puede
 tardar unos minutos. Comprueba el estado:
 
 ```powershell
-docker compose -f ms-ciclo-vida\microservicios\docker-compose.yaml ps
+docker compose ps
 ```
 
 Direcciones locales:
@@ -89,15 +89,15 @@ Direcciones locales:
 Si algún contenedor no inicia, revisa sus logs:
 
 ```powershell
-docker compose -f ms-ciclo-vida\microservicios\docker-compose.yaml logs -f ms-ciclo-vida
-docker compose -f ms-ciclo-vida\microservicios\docker-compose.yaml logs -f ms-banco-preguntas
-docker compose -f ms-ciclo-vida\microservicios\docker-compose.yaml logs -f rabbitmq
+docker compose logs -f ms-ciclo-vida
+docker compose logs -f ms-banco-preguntas
+docker compose logs -f rabbitmq
 ```
 
 Para detener los contenedores sin borrar los datos:
 
 ```powershell
-docker compose -f ms-ciclo-vida\microservicios\docker-compose.yaml down
+docker compose down
 ```
 
 Para reiniciar desde cero y eliminar también las bases de datos guardadas en
@@ -149,7 +149,7 @@ Pop-Location
 ## Pruebas de integración con Postman
 
 La colección lista para importar es
-[`ms-ciclo-vida/microservicios/postman_collection.json`](./ms-ci clo-vida/microservicios/postman_collection.json).
+[`ms-ciclo-vida/microservicios/postman_collection.json`](./ms-ciclo-vida/microservicios/postman_collection.json).
 En Postman selecciona **Import → Files** y abre ese archivo. La colección usa
 las variables `ms1` (`http://localhost:8001`), `ms2`
 (`http://localhost:8002`), `preguntaId`, `revisionId` y `revisorId` (`202`).
@@ -167,6 +167,7 @@ variables de IDs se guardan automáticamente entre solicitudes.
 | 5 | `POST {{ms2}}/api/revisiones/evaluar` | Registra la observación de ejemplo y consulta MS-1 por gRPC. Verifica `200`. |
 | 6 | `POST {{ms2}}/api/revisiones/{{revisionId}}/iniciar` | Reanuda la revisión después de la observación. Verifica `200` y estado `EN_REVISION`. |
 | 7 | `POST {{ms2}}/api/revisiones/dictamen` | Emite el dictamen de ejemplo `APROBADA`. Verifica `200` y resultado `APROBADA`. |
+| 8 | `GET {{ms1}}/preguntas/{{preguntaId}}` | Verifica el cierre del ciclo en MS-1. Verifica `200` y que el estado cambió a `APROBADA` tras recibir el evento de RabbitMQ. |
 
 **Importante:** la entrega de `PreguntaCreada` es asíncrona. Después de la
 solicitud 1, espera unos segundos antes de la solicitud 2. Si devuelve `404`,
