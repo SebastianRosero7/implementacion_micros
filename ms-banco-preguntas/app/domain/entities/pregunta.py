@@ -61,6 +61,20 @@ class Pregunta:
         self._validar_invariantes()
         self.estado = EstadoPregunta.PENDIENTE_REVISION
 
+    def aprobar(self) -> None:
+        if self.estado not in (EstadoPregunta.PENDIENTE_REVISION, EstadoPregunta.EN_REVISION):
+            raise PreguntaInvalidaError(
+                f"No se puede aprobar una pregunta en estado {self.estado.value}"
+            )
+        self.estado = EstadoPregunta.APROBADA
+
+    def rechazar(self) -> None:
+        if self.estado not in (EstadoPregunta.PENDIENTE_REVISION, EstadoPregunta.EN_REVISION):
+            raise PreguntaInvalidaError(
+                f"No se puede rechazar una pregunta en estado {self.estado.value}"
+            )
+        self.estado = EstadoPregunta.RECHAZADA
+
     def _validar_invariantes(self) -> None:
         # RF-08/RF-09: exactamente 1 contexto y 1 pregunta directa
         if not self.pregunta_directa or not self.pregunta_directa.strip():
